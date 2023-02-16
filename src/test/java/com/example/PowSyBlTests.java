@@ -120,7 +120,7 @@ class PowSyBlTests {
                 .setTransformerVoltageControlOn(true)
                 .setShuntCompensatorVoltageControlOn(true)
                 .setHvdcAcEmulation(true)
-                .setNoGeneratorReactiveLimits(true)
+                .setUseReactiveLimits(false)
                 // resolution method related
                 .setVoltageInitMode(LoadFlowParameters.VoltageInitMode.DC_VALUES);
         final var openLoadFlowParameters = new OpenLoadFlowParameters()
@@ -129,6 +129,7 @@ class PowSyBlTests {
                 // resolution method related
                 .setLowImpedanceBranchMode(OpenLoadFlowParameters.LowImpedanceBranchMode.REPLACE_BY_ZERO_IMPEDANCE_LINE)
                 .setTransformerVoltageControlMode(OpenLoadFlowParameters.TransformerVoltageControlMode.INCREMENTAL_VOLTAGE_CONTROL)
+                .setShuntVoltageControlMode(OpenLoadFlowParameters.ShuntVoltageControlMode.INCREMENTAL_VOLTAGE_CONTROL)
                 .setVoltageInitModeOverride(OpenLoadFlowParameters.VoltageInitModeOverride.NONE)
                 // slack selection related
                 .setSlackBusSelectionMode(SlackBusSelectionMode.MOST_MESHED)
