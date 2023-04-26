@@ -125,7 +125,8 @@ class PowSyBlTests {
                 .setVoltageInitMode(LoadFlowParameters.VoltageInitMode.DC_VALUES);
         final var openLoadFlowParameters = new OpenLoadFlowParameters()
                 // convergence related
-                .setMaxIteration(30)
+                .setMaxNewtonRaphsonIterations(20)
+                .setMaxOuterLoopIterations(15)
                 // resolution method related
                 .setLowImpedanceBranchMode(OpenLoadFlowParameters.LowImpedanceBranchMode.REPLACE_BY_ZERO_IMPEDANCE_LINE)
                 .setTransformerVoltageControlMode(OpenLoadFlowParameters.TransformerVoltageControlMode.INCREMENTAL_VOLTAGE_CONTROL)
