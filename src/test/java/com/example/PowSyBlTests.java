@@ -5,6 +5,7 @@ import com.powsybl.iidm.network.ImportConfig;
 import com.powsybl.iidm.network.Network;
 import com.powsybl.loadflow.LoadFlow;
 import com.powsybl.loadflow.LoadFlowParameters;
+import com.powsybl.nad.NadParameters;
 import com.powsybl.nad.NetworkAreaDiagram;
 import com.powsybl.nad.layout.LayoutParameters;
 import com.powsybl.nad.svg.SvgParameters;
@@ -44,7 +45,7 @@ class PowSyBlTests {
         assertThat(network.getSubstationCount()).isEqualTo(9);
         writeIidm(network, name, "init");
         var lfResult = LoadFlow.run(network, buildLoadFlowParameters());
-        assertThat(lfResult.isOk()).isTrue();
+        assertThat(lfResult.isFullyConverged()).isTrue();
         writeIidm(network, name, "solved");
         printSLDs(network, name);
     }
@@ -56,7 +57,7 @@ class PowSyBlTests {
         assertThat(network.getSubstationCount()).isEqualTo(3);
         writeIidm(network, name, "init");
         var lfResult = LoadFlow.run(network, buildLoadFlowParameters());
-        assertThat(lfResult.isOk()).isTrue();
+        assertThat(lfResult.isFullyConverged()).isTrue();
         writeIidm(network, name, "solved");
         printSLDs(network, name);
     }
@@ -69,7 +70,7 @@ class PowSyBlTests {
         writeIidm(network, name, "init");
 
         var lfResult = LoadFlow.run(network, buildLoadFlowParameters());
-        assertThat(lfResult.isOk()).isTrue();
+        assertThat(lfResult.isFullyConverged()).isTrue();
         writeIidm(network, name, "solved");
         printSLDs(network, name);
     }
@@ -82,7 +83,7 @@ class PowSyBlTests {
         writeIidm(network, name, "init");
 
         var lfResult = LoadFlow.run(network, buildLoadFlowParameters());
-        assertThat(lfResult.isOk()).isTrue();
+        assertThat(lfResult.isFullyConverged()).isTrue();
         writeIidm(network, name, "solved");
         printSLDs(network, name);
     }
@@ -94,7 +95,7 @@ class PowSyBlTests {
         assertThat(network.getSubstationCount()).isEqualTo(4791);
         writeIidm(network, name, "init");
         var lfResult = LoadFlow.run(network, buildLoadFlowParameters());
-        assertThat(lfResult.isOk()).isTrue();
+        assertThat(lfResult.isFullyConverged()).isTrue();
         writeIidm(network, name, "solved");
     }
 
@@ -105,6 +106,10 @@ class PowSyBlTests {
     private Network readCgmesZip(final Path zipPath, final boolean convertBoundary) {
         var props = new Properties();
         props.put("iidm.import.cgmes.convert-boundary", convertBoundary);
+        if (convertBoundary) {
+            // incompatible
+            props.put("iidm.import.cgmes.cgm-with-subnetworks", false);
+        }
         return Network.read(zipPath, LocalComputationManager.getDefault(), ImportConfig.CACHE.get(), props);
     }
 
@@ -136,7 +141,7 @@ class PowSyBlTests {
                 .setSlackBusSelectionMode(SlackBusSelectionMode.MOST_MESHED)
                 // features related
                 .setVoltageRemoteControl(true)
-                .setReactivePowerRemoteControl(true);
+                .setGeneratorReactivePowerRemoteControl(true);
         loadFlowParameters.addExtension(OpenLoadFlowParameters.class, openLoadFlowParameters);
         return loadFlowParameters;
     }
@@ -162,9 +167,10 @@ class PowSyBlTests {
         network.getVoltageLevelStream().forEach(
                 vl -> SingleLineDiagram.draw(network, vl.getId(), slds.resolve(vl.getNameOrId() + "_" + vl.getId() + ".svg"))
         );
-        NetworkAreaDiagram nad = new NetworkAreaDiagram(network);
-        SvgParameters svgParameters = new SvgParameters().setFixedHeight(1000);
-        LayoutParameters layoutParametersNad = new LayoutParameters().setSpringRepulsionFactorForceLayout(0.2);
-        nad.draw(folder.resolve("area.svg"), svgParameters, layoutParametersNad);
+        NadParameters nadParameters = new NadParameters()
+                .setSvgParameters(new SvgParameters().setFixedHeight(1000))
+                .setLayoutParameters(new LayoutParameters().setSpringRepulsionFactorForceLayout(0.2));
+        // caution: draws all voltageLevels
+        NetworkAreaDiagram.draw(network, folder.resolve("area.svg"), nadParameters, voltageLevel -> true);
     }
 }
